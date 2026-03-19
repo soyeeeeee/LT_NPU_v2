@@ -8,22 +8,22 @@ module CIU(
     input [15:0] AGU_C_param, // {AGU_C_initial, tile_size} remember to split these two signal to different control parameters
     ////////// cycle //////////
     // CI buffer
-    input [71:0] stream_a_in,
-    output [71:0] stream_a_out,
-    input [71:0] stream_b_in,
-    output [71:0] stream_b_out,
+    input [39:0] stream_a_in,
+    output [39:0] stream_a_out,
+    input [39:0] stream_b_in,
+    output [39:0] stream_b_out,
     // tile buffer operator
-    output [72:0] ciu_tbo_cycle_bus_a, // {valid_cycle_a, addr_cycle_a, din_cycle_a}
-    output [72:0] ciu_tbo_cycle_bus_b, // {valid_cycle_b, addr_cycle_b, din_cycle_b}
-    input [63:0] tbo_ciu_cycle_data,
+    output [40:0] ciu_tbo_cycle_bus_a, // {valid_cycle_a, addr_cycle_a, din_cycle_a}
+    output [40:0] ciu_tbo_cycle_bus_b, // {valid_cycle_b, addr_cycle_b, din_cycle_b}
+    input [31:0] tbo_ciu_cycle_data,
     ////////// load //////////
-    input [72:0] glb_ciu_load_bus, // {valid_load, addr_load, din_load}
-    output [72:0] ciu_tbo_load_bus, // {valid_load, addr_load, din_load}
+    input [40:0] glb_ciu_load_bus, // {valid_load, addr_load, din_load}
+    output [40:0] ciu_tbo_load_bus, // {valid_load, addr_load, din_load}
     ////////// write back //////////
     input [8:0] glb_ciu_wb_bus, // {en_wb, addr_wb_in}
     output [8:0] ciu_tbo_wb_bus, // {en_wb, addr_wb}
-    input [63:0] tbo_ciu_wb_data,
-    output [64:0] ciu_glb_wb_bus, // {data_valid, CIU_wb}
+    input [31:0] tbo_ciu_wb_data,
+    output [32:0] ciu_glb_wb_bus, // {data_valid, CIU_wb}
     ////////// busy //////////
     output cycle_busy
     );
@@ -34,12 +34,12 @@ module CIU(
 
     ////////// signals for tile buffer operator //////////
     wire [7:0] caddr;
-    assign ciu_tbo_cycle_bus_a[72] = cycle_SR[5] | cycle_SR[6];
-    assign ciu_tbo_cycle_bus_b[72] = cycle_SR[5] | cycle_SR[6] | cycle_SR[7];
-    assign ciu_tbo_cycle_bus_a[71:64] = (cycle_SR[1]) ? caddr : stream_a_in[71:64];
-    assign ciu_tbo_cycle_bus_b[71:64] = stream_b_in[71:64];
-    assign ciu_tbo_cycle_bus_a[63:0] = stream_a_in[63:0];
-    assign ciu_tbo_cycle_bus_b[63:0] = stream_b_in[63:0];
+    assign ciu_tbo_cycle_bus_a[40] = cycle_SR[5] | cycle_SR[6];
+    assign ciu_tbo_cycle_bus_b[40] = cycle_SR[5] | cycle_SR[6] | cycle_SR[7];
+    assign ciu_tbo_cycle_bus_a[39:32] = (cycle_SR[1]) ? caddr : stream_a_in[39:32];
+    assign ciu_tbo_cycle_bus_b[39:32] = stream_b_in[39:32];
+    assign ciu_tbo_cycle_bus_a[31:0] = stream_a_in[31:0];
+    assign ciu_tbo_cycle_bus_b[31:0] = stream_b_in[31:0];
     ////////// signals for tile buffer operator end //////////
 
     ////////// AGU //////////
@@ -71,7 +71,7 @@ module CIU(
     ////////// cycle controller end //////////
 
     ////////// stream buffer //////////
-    wire [71:0] stream_initial;
+    wire [39:0] stream_initial;
     Stream_buffer stream_buffer(
         .CLK(CLK),
         .rst(cycle_rst),

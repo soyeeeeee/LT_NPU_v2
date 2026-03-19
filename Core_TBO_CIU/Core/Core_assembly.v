@@ -363,7 +363,7 @@ module Core(
         .CLK(CLK),
         .rst(core_rst),
         .en(SR_1[0]),
-        .acc_out({acc_out_0, acc_out_1, acc_out_2, acc_out_3}),
+        .cal_result({acc_out_0, acc_out_1, acc_out_2, acc_out_3}),
         .core_out(din_store)
     );
     ////////// Output buffer end //////////

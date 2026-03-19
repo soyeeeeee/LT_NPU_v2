@@ -8,12 +8,12 @@ module GLB (
     input ena,
     input wea,
     input [13:0] addra,
-    input [63:0] dina,
+    input [31:0] dina,
     ///// Port B (Read) /////
     input enb,
     input regceb,
     input [13:0] addrb,
-    output [63:0] doutb
+    output [31:0] doutb
 );
 
     // -------------------------------------------------------------------------
@@ -22,19 +22,19 @@ module GLB (
     xpm_memory_sdpram #(
         .ADDR_WIDTH_A(14),               // 地址寬度: 14 bits (2^14 = 16384)
         .ADDR_WIDTH_B(14),               // 讀取端與寫入端一致
-        .BYTE_WRITE_WIDTH_A(64),         // 64: 不使用 Byte Enable (一次寫64bit)
+        .BYTE_WRITE_WIDTH_A(32),         // 32: 不使用 Byte Enable (一次寫32bit)
         .CLOCKING_MODE("common_clock"),  // 讀寫共用同一個 Clock
         .ECC_MODE("no_ecc"),             // 不需要 ECC
         .MEMORY_INIT_FILE("none"),       // URAM 不支援初始值檔案
         .MEMORY_OPTIMIZATION("true"),    // 讓 Vivado 自動優化
         .MEMORY_PRIMITIVE("ultra"),      // ★★★ 關鍵：強制指定 "ultra" (URAM) ★★★
-        .MEMORY_SIZE(1048576),           // 總容量 bits = 64 * 16384 = 1,048,576
+        .MEMORY_SIZE(524288),            // 總容量 bits = 32 * 16384 = 524,288
         .MESSAGE_CONTROL(0),
-        .READ_DATA_WIDTH_B(64),          // 讀取寬度
+        .READ_DATA_WIDTH_B(32),          // 讀取寬度
         .READ_LATENCY_B(2),              // already has core output reg outside the GLB
         .USE_MEM_INIT(0),
         .WAKEUP_TIME("disable_sleep"),
-        .WRITE_DATA_WIDTH_A(64),         // 寫入寬度
+        .WRITE_DATA_WIDTH_A(32),         // 寫入寬度
         .WRITE_MODE_B("read_first")      // 讀取時不干擾 (效能最好)
     )
     xpm_memory_sdpram_inst (

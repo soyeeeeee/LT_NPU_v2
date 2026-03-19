@@ -3,9 +3,9 @@
 //combinational delay = 0 cycle
 
 module Comparator(
-    input signed [15:0] comp_a,
-    input signed [15:0] comp_b,
-    output reg signed [15:0] comp_out
+    input signed [7:0] comp_a,
+    input signed [7:0] comp_b,
+    output reg signed [7:0] comp_out
     );
     
     always@(*) begin

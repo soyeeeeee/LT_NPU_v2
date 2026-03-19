@@ -53,13 +53,13 @@ module Core_TBO_CIU(
 
     ////////// CIU //////////
     // cycle bus
-    wire [72:0] ciu_tbo_cycle_bus_a, ciu_tbo_cycle_bus_b;
-    wire [63:0] tbo_ciu_cycle_data;
+    wire [40:0] ciu_tbo_cycle_bus_a, ciu_tbo_cycle_bus_b;
+    wire [31:0] tbo_ciu_cycle_data;
     // load bus
-    wire [72:0] ciu_tbo_load_bus;
+    wire [40:0] ciu_tbo_load_bus;
     // write back bus
     wire [8:0] ciu_tbo_wb_bus;
-    wire [63:0] tbo_ciu_wb_data;
+    wire [31:0] tbo_ciu_wb_data;
     // CIU instantiation
     CIU ciu(
         .CLK(CLK),
@@ -90,13 +90,13 @@ module Core_TBO_CIU(
     ////////// Tile Buffer Operator //////////
     // tbo bus
     wire [8:0] core_tbo_cal_bus;
-    wire [63:0] tbo_core_cal_data_1;
-    wire [63:0] tbo_core_cal_data_2;
-    wire [63:0] tbo_core_cal_data_3;
-    wire [63:0] tbo_core_cal_data_4;
-    wire [63:0] tbo_core_cal_data_5;
-    wire [63:0] tbo_core_cal_data_6;
-    wire [72:0] core_tbo_store_bus;
+    wire [31:0] tbo_core_cal_data_1;
+    wire [31:0] tbo_core_cal_data_2;
+    wire [31:0] tbo_core_cal_data_3;
+    wire [31:0] tbo_core_cal_data_4;
+    wire [31:0] tbo_core_cal_data_5;
+    wire [31:0] tbo_core_cal_data_6;
+    wire [40:0] core_tbo_store_bus;
     // TBO instantiation
     Tile_buffer_operator tbo(
         .clka(CLK),
@@ -129,7 +129,7 @@ module Core_TBO_CIU(
     ////////// Core //////////
     // W_storage
     wire [12:0] core_w_storage_bus; // {W_storage_en, Waddr[11:0]}
-    wire [255:0] w_storage_core_data; // {data_0, data_1, data_2, data_3}
+    wire [127:0] w_storage_core_data; // {data_0, data_1, data_2, data_3}
     // B_storage
     wire [8:0] core_b_storage_bus; // {B_storage_en, baddr[7:0]}
     wire [127:0] b_storage_core_data; // {data_0, data_1, data_2, data_3}
@@ -152,10 +152,10 @@ module Core_TBO_CIU(
         .tbo_core_cal_data_6(tbo_core_cal_data_6),
         // W_storage
         .core_w_storage_bus(core_w_storage_bus), // {W_storage_en, Waddr[11:0]}
-        .w_storage_core_data_0(w_storage_core_data[255:192]),
-        .w_storage_core_data_1(w_storage_core_data[191:128]),
-        .w_storage_core_data_2(w_storage_core_data[127:64]),
-        .w_storage_core_data_3(w_storage_core_data[63:0]),
+        .w_storage_core_data_0(w_storage_core_data[127:96]),
+        .w_storage_core_data_1(w_storage_core_data[95:64]),
+        .w_storage_core_data_2(w_storage_core_data[63:32]),
+        .w_storage_core_data_3(w_storage_core_data[31:0]),
         // B_storage
         .core_b_storage_bus(core_b_storage_bus), // {B_storage_en, baddr[7:0]}
         .b_storage_core_data_0(b_storage_core_data[127:96]),
@@ -194,7 +194,7 @@ module Core_TBO_CIU(
         .enb(core_w_storage_bus[12]),
         .regceb(1'b1),
         .addrb(core_w_storage_bus[11:0]),
-        .doutb(w_storage_core_data[255:192])
+        .doutb(w_storage_core_data[127:96])
     );
     W_storage w_storage_1(
         .CLK(CLK),
@@ -208,7 +208,7 @@ module Core_TBO_CIU(
         .enb(core_w_storage_bus[12]),
         .regceb(1'b1),
         .addrb(core_w_storage_bus[11:0]),
-        .doutb(w_storage_core_data[191:128])
+        .doutb(w_storage_core_data[95:64])
     );
     W_storage w_storage_2(
         .CLK(CLK),
@@ -222,7 +222,7 @@ module Core_TBO_CIU(
         .enb(core_w_storage_bus[12]),
         .regceb(1'b1),
         .addrb(core_w_storage_bus[11:0]),
-        .doutb(w_storage_core_data[127:64])
+        .doutb(w_storage_core_data[63:32])
     );
     W_storage w_storage_3(
         .CLK(CLK),
@@ -236,7 +236,7 @@ module Core_TBO_CIU(
         .enb(core_w_storage_bus[12]),
         .regceb(1'b1),
         .addrb(core_w_storage_bus[11:0]),
-        .doutb(w_storage_core_data[63:0])
+        .doutb(w_storage_core_data[31:0])
     );
     ////////// W_storage end //////////
 

@@ -7,9 +7,9 @@ module PE(
     input en,
     input rst,
     input [1:0] PE_mode,
-    input signed [15:0] PE_A,
-    input signed [15:0] PE_B,
-    output reg signed [31:0] PE_out
+    input signed [7:0] PE_A,
+    input signed [7:0] PE_B,
+    output reg signed [15:0] PE_out
     );
     
     ////////// SR //////////
@@ -28,9 +28,9 @@ module PE(
     parameter MAC = 0, GAP = 1, pass = 2;
 
     ////////// mult_16 //////////
-    reg signed [15:0] A_reg, B_reg;
-    (* use_dsp = "yes" *) reg signed [31:0] mult_reg;
-    reg signed [31:0] P;
+    reg signed [7:0] A_reg, B_reg;
+    (* use_dsp = "yes" *) reg signed [15:0] mult_reg;
+    reg signed [15:0] P;
     // stage 1
     always@(posedge CLK) begin
         if(rst) begin
@@ -63,23 +63,23 @@ module PE(
     ////////// mult_16 end //////////
     
     ////////// shift_right_4 //////////
-    reg signed [31:0] A_shift;
+    reg signed [15:0] A_shift;
     always@(posedge CLK) begin
         if(rst==1) A_shift <= 0;
-        else A_shift <= {{12{PE_A[15]}}, PE_A, 4'b0};
+        else A_shift <= {{8{PE_A[7]}}, PE_A};
     end
     ////////// shift_right_4 end //////////
 
     ////////// pass_through //////////
-    reg signed [31:0] A_pass;
+    reg signed [15:0] A_pass;
     always@(posedge CLK) begin
         if(rst==1) A_pass <= 0;
-        else A_pass <= {{8{PE_A[15]}}, PE_A, 8'b0};
+        else A_pass <= {{4{PE_A[7]}}, PE_A, 4'b0};
     end
     ////////// pass_through end //////////
 
     ////////// output mux //////////
-    reg signed [31:0]out_buffer;
+    reg signed [15:0] out_buffer;
     always@(*) begin
         case(PE_mode)
             MAC: out_buffer = P;

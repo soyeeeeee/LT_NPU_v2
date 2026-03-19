@@ -6,12 +6,12 @@ module Output_buffer(
     input CLK,
     input rst,
     input en,
-    input [63:0] acc_out,
-    output reg [63:0] core_out
+    input [31:0] cal_result,
+    output reg [31:0] core_out
     );
     
     ////////// output //////////
-    reg [63:0] out_0;
+    reg [31:0] out_0;
     always@(posedge CLK) begin
         if(rst) begin
             core_out <= 0;
@@ -27,7 +27,7 @@ module Output_buffer(
         end
         else begin
             if(en) begin
-                out_0 <= acc_out;
+                out_0 <= cal_result;
             end
             else begin
                 out_0 <= out_0;

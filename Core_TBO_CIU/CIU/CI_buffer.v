@@ -5,9 +5,9 @@ module CI_buffer(
     input rst,
     input en,
     input mux_sel, // 0: pass stream_in to stream_out; 1: load stream initial
-    input [71:0] stream_in,
-    input [71:0] stream_initial,
-    output reg [71:0] stream_out
+    input [39:0] stream_in,
+    input [39:0] stream_initial,
+    output reg [39:0] stream_out
     );
 
     always @(posedge CLK) begin

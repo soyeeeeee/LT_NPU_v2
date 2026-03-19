@@ -12,11 +12,11 @@ module Accumulator(
     input ReLU_en,
     input [7:0] ch_in,
     input signed [31:0]bias,
-    input signed [31:0]PE_out_0_in,
-    input signed [31:0]PE_out_1_in,
-    input signed [31:0]PE_out_2_in,
-    input signed [31:0]PE_out_3_in,
-    output reg signed [15:0]acc_out,
+    input signed [15:0]PE_out_0_in,
+    input signed [15:0]PE_out_1_in,
+    input signed [15:0]PE_out_2_in,
+    input signed [15:0]PE_out_3_in,
+    output reg signed [23:0]acc_out,
     output acc_done
     );
     // mode define
@@ -46,12 +46,12 @@ module Accumulator(
             default: kernel_L = 0;
         endcase
     end
-    reg signed [32:0] PE_out_0, PE_out_1, PE_out_2, PE_out_3;
+    reg signed [16:0] PE_out_0, PE_out_1, PE_out_2, PE_out_3;
     always@(*) begin
-        PE_out_0 = {{1{PE_out_0_in[31]}}, PE_out_0_in};
-        PE_out_1 = {{1{PE_out_1_in[31]}}, PE_out_1_in};
-        PE_out_2 = {{1{PE_out_2_in[31]}}, PE_out_2_in};
-        PE_out_3 = {{1{PE_out_3_in[31]}}, PE_out_3_in};
+        PE_out_0 = {{1{PE_out_0_in[15]}}, PE_out_0_in};
+        PE_out_1 = {{1{PE_out_1_in[15]}}, PE_out_1_in};
+        PE_out_2 = {{1{PE_out_2_in[15]}}, PE_out_2_in};
+        PE_out_3 = {{1{PE_out_3_in[15]}}, PE_out_3_in};
     end
     ////////// signal generate end //////////
 
@@ -116,12 +116,12 @@ module Accumulator(
             done_sr <= {done_sr[1:0], done};
         end
     end
-    assign acc_done = done_sr[1];
+    assign acc_done = done_sr[1]; // -1 CLK than value
     ////////// SR end //////////
     
     ////////// Stage 1 ////////// 
     // adder tree
-    reg signed [32:0] add_buffer_10, add_buffer_11;
+    reg signed [16:0] add_buffer_10, add_buffer_11;
     always@(posedge CLK) begin
         if(rst) begin
             add_buffer_10 <= 0;
@@ -133,18 +133,18 @@ module Accumulator(
         end
     end
     // compare chain
-    wire signed [15:0] PE_out_0_trunc = PE_out_0[23:8];
-    wire signed [15:0] PE_out_1_trunc = PE_out_1[23:8];
-    reg signed [15:0] PE_out_2_trunc;
-    wire signed [15:0] comp_1_out;
-    reg signed [15:0] comp_result_1;
+    wire signed [7:0] PE_out_0_trunc = PE_out_0[11:4];
+    wire signed [7:0] PE_out_1_trunc = PE_out_1[11:4];
+    reg signed [7:0] PE_out_2_trunc;
+    wire signed [7:0] comp_1_out;
+    reg signed [7:0] comp_result_1;
     always@(posedge CLK) begin
         if(rst) begin
             PE_out_2_trunc <= 0;
         end
         else begin
             if(en) begin
-                PE_out_2_trunc <= PE_out_2[23:8];
+                PE_out_2_trunc <= PE_out_2[11:4];
             end
             else begin
                 PE_out_2_trunc <= PE_out_2_trunc;
@@ -174,16 +174,16 @@ module Accumulator(
 
     ////////// Stage 2 //////////
     // adder tree
-    reg signed [33:0] adder_result;
-    wire signed [33:0] add_buffer_10_ext = {add_buffer_10[32], add_buffer_10};
-    wire signed [33:0] add_buffer_11_ext = {add_buffer_11[32], add_buffer_11};
+    reg signed [17:0] adder_result;
+    wire signed [17:0] add_buffer_10_ext = {add_buffer_10[16], add_buffer_10};
+    wire signed [17:0] add_buffer_11_ext = {add_buffer_11[16], add_buffer_11};
     always@(posedge CLK) begin
         if(rst) adder_result <= 0;
         else adder_result <= add_buffer_10_ext + add_buffer_11_ext;
     end
     // compare chain
-    wire signed [15:0] comp_2_out;
-    reg signed [15:0] comp_result_2;
+    wire signed [7:0] comp_2_out;
+    reg signed [7:0] comp_result_2;
     Comparator comp_2(
         .comp_a(comp_result_1), 
         .comp_b(PE_out_2_trunc), 
@@ -224,8 +224,8 @@ module Accumulator(
     ////////// Stage 3 //////////
     // accumulate
     (* use_dsp = "yes" *) reg signed [47:0] accumulator_reg;
-    wire signed [47:0] bias_ext = (mode == maxpooling || mode == GAP) ? 48'sd0 : {{16{bias_buffer[31]}}, bias_buffer};
-    wire signed [47:0] adder_result_ext = {{14{adder_result[33]}}, adder_result};
+    wire signed [47:0] bias_ext = (mode == maxpooling || mode == GAP) ? 48'sd0 : {{12{bias_buffer[31]}}, bias_buffer, 4'd0};
+    wire signed [47:0] adder_result_ext = {{26{adder_result[17]}}, adder_result, 4'd0};
     always@(posedge CLK) begin
         if(rst == 1) begin
             accumulator_reg <= 0;
@@ -245,8 +245,8 @@ module Accumulator(
         end
     end
     // running comparator
-    reg signed [15:0] comp_result;
-    wire signed [15:0] comp_3_out;
+    reg signed [7:0] comp_result;
+    wire signed [7:0] comp_3_out;
     Comparator comp_3(
         .comp_a(comp_result_2), 
         .comp_b(comp_result), 
@@ -254,7 +254,7 @@ module Accumulator(
     );
     always@(posedge CLK) begin
         if(rst) begin
-            comp_result <= 16'h8000;
+            comp_result <= 8'h80;
         end
         else begin
             if(rst_bias_sr[1]) begin
@@ -271,19 +271,23 @@ module Accumulator(
     ////////// Stage 3 end //////////
     
     ////////// acc_result Truncate //////////
-    reg signed [15:0] acc_out_truncated;
+    reg signed [23:0] acc_out_truncated;
+    wire signed [24:0] rounded_accumulator_reg = $signed({accumulator_reg[27], accumulator_reg[27:4]}) + {24'd0, accumulator_reg[3]};
     always@(*) begin
-        if(accumulator_reg[47:23] != {25{accumulator_reg[23]}}) begin
-            //overflow
+        if(accumulator_reg[47:27] != {21{accumulator_reg[27]}}) begin
+            // overflow
             if(accumulator_reg[47] == 0) begin
-                acc_out_truncated = 16'h7FFF; //max pos
+                acc_out_truncated = 24'h7FFFFF; // max pos
             end
             else begin
-                acc_out_truncated = 16'h8000; //max neg
+                acc_out_truncated = 24'h800000; // max neg
             end
         end
+        else if(rounded_accumulator_reg == 25'h0_800000) begin
+            acc_out_truncated = 24'h7FFFFF; // max pos
+        end
         else begin
-            acc_out_truncated = accumulator_reg[23:8];
+            acc_out_truncated = rounded_accumulator_reg[23:0];
         end
     end
     ////////// acc_result Truncate end //////////
@@ -296,15 +300,15 @@ module Accumulator(
         else begin
             case(mode)
             maxpooling: begin
-                acc_out <= comp_result;
+                acc_out <= {16{comp_result[7]}, comp_result};
             end
             default: begin
                 if(ReLU_en == 1) begin
-                    if(acc_out_truncated[15] == 0) begin
+                    if(acc_out_truncated[23] == 0) begin
                         acc_out <= acc_out_truncated;
                     end
                     else begin
-                        acc_out <= 16'd0;
+                        acc_out <= 24'd0;
                     end
                 end
                 else begin

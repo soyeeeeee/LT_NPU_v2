@@ -5,8 +5,8 @@ module Stream_buffer(
     input rst,
     input en,
     input [7:0] caddr,
-    input [63:0] tbo_ciu_cycle_data,
-    output reg [71:0] stream_initial
+    input [31:0] tbo_ciu_cycle_data,
+    output reg [39:0] stream_initial
     );
 
     ////////// address buffer ////////// (2 cycle delay)

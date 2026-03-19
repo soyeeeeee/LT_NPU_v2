@@ -5,12 +5,12 @@
 module CIU_load_buffer(
     input CLK,
     input rst,
-    input [72:0] glb_ciu_load_bus, // {valid, addr, data}
-    output [72:0] ciu_tbo_load_bus // {valid, addr, data}
+    input [40:0] glb_ciu_load_bus, // {valid, addr, data}
+    output [40:0] ciu_tbo_load_bus // {valid, addr, data}
     );
 
     ////////// buffer //////////
-    reg [72:0] load_buffer;
+    reg [40:0] load_buffer;
     always @(posedge CLK) begin
         if (rst) begin
             load_buffer <= 0;
