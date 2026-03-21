@@ -15,11 +15,11 @@ module GLB_input(
     output [8:0] glb_prep_wb_bus, // {wb_sel[0], taddr[7:0]}
     output [10:0] glb_ciu_wb_bus_123, // {wb_sel[3:1], taddr[7:0]}
     output [10:0] glb_ciu_wb_bus_456, // {wb_sel[6:4], taddr[7:0]}
-    input [64:0] prep_glb_wb_bus, // {wb_en_pp, wb_data_pp[63:0]}
-    input [64:0] ciu_glb_wb_bus_123, // {wb_en_123, wb_data_123[63:0]}
-    input [64:0] ciu_glb_wb_bus_456, // {wb_en_456, wb_data_456[63:0]}
+    input [32:0] prep_glb_wb_bus, // {wb_en_pp, wb_data_pp[31:0]}
+    input [32:0] ciu_glb_wb_bus_123, // {wb_en_123, wb_data_123[31:0]}
+    input [32:0] ciu_glb_wb_bus_456, // {wb_en_456, wb_data_456[31:0]}
     // glb
-    output [78:0] glb_input_bus, // {glb_ena, gaddr[13:0], glb_dina[63:0]}
+    output [46:0] glb_input_bus, // {glb_ena, gaddr[13:0], glb_dina[31:0]}
     // busy signal
     output glb_input_busy
     );
@@ -30,7 +30,7 @@ module GLB_input(
     wire set;
     wire glb_in_rst;
     wire AGU_T_done, AGU_G_done;
-    wire wb_data_valid = (ciu_glb_wb_bus_123[64] | ciu_glb_wb_bus_456[64] | prep_glb_wb_bus[64]);
+    wire wb_data_valid = (ciu_glb_wb_bus_123[32] | ciu_glb_wb_bus_456[32] | prep_glb_wb_bus[32]);
     GLB_input_controller glb_input_control(
         .CLK(CLK),
         .en(en),
@@ -48,7 +48,7 @@ module GLB_input(
 
     ////////// signal assign //////////
     wire [13:0] gaddr;
-    wire [63:0] data_transposed;
+    wire [31:0] data_transposed;
     assign glb_input_bus = {SR[5], gaddr, data_transposed};
     ////////// signal assign end //////////
 
@@ -106,20 +106,20 @@ module GLB_input(
     ////////// write back enable end //////////
 
     ////////// data buffer //////////
-    wire [2:0] wb_data_valid_bus = {prep_glb_wb_bus[64], ciu_glb_wb_bus_123[64], ciu_glb_wb_bus_456[64]};
-    reg [63:0] glb_wb_buffer;
+    wire [2:0] wb_data_valid_bus = {prep_glb_wb_bus[32], ciu_glb_wb_bus_123[32], ciu_glb_wb_bus_456[32]};
+    reg [31:0] glb_wb_buffer;
     // data buffer 0
     always@(posedge CLK) begin
         if(glb_in_rst) begin
-            glb_wb_buffer <= 64'd0;
+            glb_wb_buffer <= 32'd0;
         end
         else begin
             if(wb_data_valid) begin
                 case(wb_data_valid_bus)
-                    3'b100: glb_wb_buffer <= prep_glb_wb_bus[63:0];
-                    3'b010: glb_wb_buffer <= ciu_glb_wb_bus_123[63:0];
-                    3'b001: glb_wb_buffer <= ciu_glb_wb_bus_456[63:0];
-                    default: glb_wb_buffer <= 64'd0;
+                    3'b100: glb_wb_buffer <= prep_glb_wb_bus[31:0];
+                    3'b010: glb_wb_buffer <= ciu_glb_wb_bus_123[31:0];
+                    3'b001: glb_wb_buffer <= ciu_glb_wb_bus_456[31:0];
+                    default: glb_wb_buffer <= 32'd0;
                 endcase
             end
             else begin

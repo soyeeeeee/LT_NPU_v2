@@ -11,11 +11,11 @@ module GLB_output(
     input [13:0] ch_to_Y_Y, // addr offset for AGU_G
     // glb
     output [14:0] glb_output_bus, // {enb, gaddr[13:0]}
-    input [63:0] glb_doutb,
+    input [31:0] glb_doutb,
     // AGU_T
     input [22:0] AGU_T_param, // {AGU_T_initial[11:0], tile_width[6:0], tile_ch[7:0]}
     // output tile
-    output [78:0] glb_load_bus, // {load_sel[6:0], taddr[7:0], glb_doutb_transposed[63:0]}
+    output [46:0] glb_load_bus, // {load_sel[6:0], taddr[7:0], glb_doutb_transposed[31:0]}
     // busy signal
     output glb_output_busy
     );
@@ -45,7 +45,7 @@ module GLB_output(
     reg [6:0] load_sel; // {core 1~6, Post_processing}
     reg [7:0] taddr_buffer;
     wire [13:0] gaddr;
-    wire [63:0] glb_doutb_transposed;
+    wire [31:0] glb_doutb_transposed;
     assign glb_output_bus = {AGU_G_en_next, gaddr[13:0]};
     assign glb_load_bus = {load_sel, taddr_buffer, glb_doutb_transposed};
     ////////// signal assign end //////////
