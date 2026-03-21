@@ -19,22 +19,22 @@ module GLB_operator(
     output [8:0] glb_ciu_wb_bus_4, // {en, addr[7:0]}
     output [8:0] glb_ciu_wb_bus_5, // {en, addr[7:0]}
     output [8:0] glb_ciu_wb_bus_6, // {en, addr[7:0]}
-    input [64:0] prep_glb_wb_bus, // {valid, data[63:0]}
-    input [64:0] ciu_glb_wb_bus_1, // {valid, data[63:0]}
-    input [64:0] ciu_glb_wb_bus_2, // {valid, data[63:0]}
-    input [64:0] ciu_glb_wb_bus_3, // {valid, data[63:0]}
-    input [64:0] ciu_glb_wb_bus_4, // {valid, data[63:0]}
-    input [64:0] ciu_glb_wb_bus_5, // {valid, data[63:0]}
-    input [64:0] ciu_glb_wb_bus_6, // {valid, data[63:0]}
+    input [32:0] prep_glb_wb_bus, // {valid, data[63:0]}
+    input [32:0] ciu_glb_wb_bus_1, // {valid, data[63:0]}
+    input [32:0] ciu_glb_wb_bus_2, // {valid, data[63:0]}
+    input [32:0] ciu_glb_wb_bus_3, // {valid, data[63:0]}
+    input [32:0] ciu_glb_wb_bus_4, // {valid, data[63:0]}
+    input [32:0] ciu_glb_wb_bus_5, // {valid, data[63:0]}
+    input [32:0] ciu_glb_wb_bus_6, // {valid, data[63:0]}
     ////////// GLB_output //////////
     // output tile
-    output [72:0] glb_ciu_load_bus_1, // {en, addr[7:0], data[63:0]}
-    output [72:0] glb_ciu_load_bus_2, // {en, addr[7:0], data[63:0]}
-    output [72:0] glb_ciu_load_bus_3, // {en, addr[7:0], data[63:0]}
-    output [72:0] glb_ciu_load_bus_4, // {en, addr[7:0], data[63:0]}
-    output [72:0] glb_ciu_load_bus_5, // {en, addr[7:0], data[63:0]}
-    output [72:0] glb_ciu_load_bus_6, // {en, addr[7:0], data[63:0]}
-    output reg [72:0] glb_posp_load_bus, // {en, addr[7:0], data[63:0]}
+    output [40:0] glb_ciu_load_bus_1, // {en, addr[7:0], data[31:0]}
+    output [40:0] glb_ciu_load_bus_2, // {en, addr[7:0], data[31:0]}
+    output [40:0] glb_ciu_load_bus_3, // {en, addr[7:0], data[31:0]}
+    output [40:0] glb_ciu_load_bus_4, // {en, addr[7:0], data[31:0]}
+    output [40:0] glb_ciu_load_bus_5, // {en, addr[7:0], data[31:0]}
+    output [40:0] glb_ciu_load_bus_6, // {en, addr[7:0], data[31:0]}
+    output reg [40:0] glb_posp_load_bus, // {en, addr[7:0], data[31:0]}
     // busy signal
     output glb_input_busy,
     output glb_output_busy
@@ -95,9 +95,9 @@ module GLB_operator(
     ////////// ch_to_Y end //////////
 
     ////////// GLB //////////
-    wire [63:0] glb_doutb;
-    reg [63:0] glb_doutb_buffer;
-    wire [78:0] glb_input_bus;
+    wire [31:0] glb_doutb;
+    reg [31:0] glb_doutb_buffer;
+    wire [46:0] glb_input_bus;
     wire [14:0] glb_output_bus;
     always@(posedge CLK) begin
         if(rst) glb_doutb_buffer <= 0;
@@ -108,10 +108,10 @@ module GLB_operator(
         .CLK(CLK),
         .rst(rst),
         // port a
-        .ena(glb_input_bus[78]),
-        .wea(glb_input_bus[78]),
-        .addra(glb_input_bus[77:64]),
-        .dina(glb_input_bus[63:0]),
+        .ena(glb_input_bus[46]),
+        .wea(glb_input_bus[46]),
+        .addra(glb_input_bus[45:32]),
+        .dina(glb_input_bus[31:0]),
         // port b
         .enb(glb_output_bus[14]),
         .regceb(1'b1),
@@ -122,27 +122,27 @@ module GLB_operator(
 
     ////////// GLB_input //////////
     // ciu to glb wb bus buffer
-    reg [64:0] ciu_glb_wb_bus_123, ciu_glb_wb_bus_456;
+    reg [32:0] ciu_glb_wb_bus_123, ciu_glb_wb_bus_456;
     wire [2:0] wb_sel_123, wb_sel_456;
-    assign wb_sel_123 = {ciu_glb_wb_bus_1[64], ciu_glb_wb_bus_2[64], ciu_glb_wb_bus_3[64]};
-    assign wb_sel_456 = {ciu_glb_wb_bus_4[64], ciu_glb_wb_bus_5[64], ciu_glb_wb_bus_6[64]};
+    assign wb_sel_123 = {ciu_glb_wb_bus_1[32], ciu_glb_wb_bus_2[32], ciu_glb_wb_bus_3[32]};
+    assign wb_sel_456 = {ciu_glb_wb_bus_4[32], ciu_glb_wb_bus_5[32], ciu_glb_wb_bus_6[32]};
     always@(posedge CLK) begin
         if(rst) begin
-            ciu_glb_wb_bus_123 <= 65'd0;
-            ciu_glb_wb_bus_456 <= 65'd0;
+            ciu_glb_wb_bus_123 <= 33'd0;
+            ciu_glb_wb_bus_456 <= 33'd0;
         end
         else begin
             case(wb_sel_123)
-                3'b100: ciu_glb_wb_bus_123 <= {1'b1, ciu_glb_wb_bus_1[63:0]};
-                3'b010: ciu_glb_wb_bus_123 <= {1'b1, ciu_glb_wb_bus_2[63:0]};
-                3'b001: ciu_glb_wb_bus_123 <= {1'b1, ciu_glb_wb_bus_3[63:0]};
-                default: ciu_glb_wb_bus_123 <= 65'd0;
+                3'b100: ciu_glb_wb_bus_123 <= {1'b1, ciu_glb_wb_bus_1[31:0]};
+                3'b010: ciu_glb_wb_bus_123 <= {1'b1, ciu_glb_wb_bus_2[31:0]};
+                3'b001: ciu_glb_wb_bus_123 <= {1'b1, ciu_glb_wb_bus_3[31:0]};
+                default: ciu_glb_wb_bus_123 <= 33'd0;
             endcase
             case(wb_sel_456)
-                3'b100: ciu_glb_wb_bus_456 <= {1'b1, ciu_glb_wb_bus_4[63:0]};
-                3'b010: ciu_glb_wb_bus_456 <= {1'b1, ciu_glb_wb_bus_5[63:0]};
-                3'b001: ciu_glb_wb_bus_456 <= {1'b1, ciu_glb_wb_bus_6[63:0]};
-                default: ciu_glb_wb_bus_456 <= 65'd0;
+                3'b100: ciu_glb_wb_bus_456 <= {1'b1, ciu_glb_wb_bus_4[31:0]};
+                3'b010: ciu_glb_wb_bus_456 <= {1'b1, ciu_glb_wb_bus_5[31:0]};
+                3'b001: ciu_glb_wb_bus_456 <= {1'b1, ciu_glb_wb_bus_6[31:0]};
+                default: ciu_glb_wb_bus_456 <= 33'd0;
             endcase
         end
     end
@@ -183,28 +183,28 @@ module GLB_operator(
 
     ////////// GLB_output //////////
     // glb to ciu/PosP load bus buffer
-    reg [74:0] glb_ciu_load_bus_123; // {en[2:0], addr[7:0], data[63:0]}
-    reg [74:0] glb_ciu_load_bus_456; // {en[2:0], addr[7:0], data[63:0]}
-    wire [78:0] glb_load_bus;
+    reg [42:0] glb_ciu_load_bus_123; // {en[2:0], addr[7:0], data[31:0]}
+    reg [42:0] glb_ciu_load_bus_456; // {en[2:0], addr[7:0], data[31:0]}
+    wire [46:0] glb_load_bus;
     always@(posedge CLK) begin
         if(rst) begin
-            glb_ciu_load_bus_123 <= 75'd0;
-            glb_ciu_load_bus_456 <= 75'd0;
-            glb_posp_load_bus <= 73'd0;
+            glb_ciu_load_bus_123 <= 43'd0;
+            glb_ciu_load_bus_456 <= 43'd0;
+            glb_posp_load_bus <= 41'd0;
         end
         else begin
-            glb_ciu_load_bus_123 <= {glb_load_bus[78:76], glb_load_bus[71:0]};
-            glb_ciu_load_bus_456 <= {glb_load_bus[75:73], glb_load_bus[71:0]};
-            glb_posp_load_bus <= {glb_load_bus[72], glb_load_bus[71:0]};
+            glb_ciu_load_bus_123 <= {glb_load_bus[46:44], glb_load_bus[39:0]};
+            glb_ciu_load_bus_456 <= {glb_load_bus[43:41], glb_load_bus[39:0]};
+            glb_posp_load_bus <= {glb_load_bus[40], glb_load_bus[39:0]};
         end
     end
     // glb to ciu/PosP load bus split
-    assign glb_ciu_load_bus_1 = {glb_ciu_load_bus_123[74], glb_ciu_load_bus_123[71:64], glb_ciu_load_bus_123[63:0]};
-    assign glb_ciu_load_bus_2 = {glb_ciu_load_bus_123[73], glb_ciu_load_bus_123[71:64], glb_ciu_load_bus_123[63:0]};
-    assign glb_ciu_load_bus_3 = {glb_ciu_load_bus_123[72], glb_ciu_load_bus_123[71:64], glb_ciu_load_bus_123[63:0]};
-    assign glb_ciu_load_bus_4 = {glb_ciu_load_bus_456[74], glb_ciu_load_bus_456[71:64], glb_ciu_load_bus_456[63:0]};
-    assign glb_ciu_load_bus_5 = {glb_ciu_load_bus_456[73], glb_ciu_load_bus_456[71:64], glb_ciu_load_bus_456[63:0]};
-    assign glb_ciu_load_bus_6 = {glb_ciu_load_bus_456[72], glb_ciu_load_bus_456[71:64], glb_ciu_load_bus_456[63:0]};
+    assign glb_ciu_load_bus_1 = {glb_ciu_load_bus_123[42], glb_ciu_load_bus_123[39:32], glb_ciu_load_bus_123[31:0]};
+    assign glb_ciu_load_bus_2 = {glb_ciu_load_bus_123[41], glb_ciu_load_bus_123[39:32], glb_ciu_load_bus_123[31:0]};
+    assign glb_ciu_load_bus_3 = {glb_ciu_load_bus_123[40], glb_ciu_load_bus_123[39:32], glb_ciu_load_bus_123[31:0]};
+    assign glb_ciu_load_bus_4 = {glb_ciu_load_bus_456[42], glb_ciu_load_bus_456[39:32], glb_ciu_load_bus_456[31:0]};
+    assign glb_ciu_load_bus_5 = {glb_ciu_load_bus_456[41], glb_ciu_load_bus_456[39:32], glb_ciu_load_bus_456[31:0]};
+    assign glb_ciu_load_bus_6 = {glb_ciu_load_bus_456[40], glb_ciu_load_bus_456[39:32], glb_ciu_load_bus_456[31:0]};
     
     // GLB_output instance
     GLB_output glb_output(
@@ -222,7 +222,7 @@ module GLB_operator(
         // AGU_T
         .AGU_T_param(output_AGU_T_param), // {AGU_T_initial[11:0], tile_width[6:0], tile_ch[7:0]}
         // output tile
-        .glb_load_bus(glb_load_bus), // {load_sel[6:0], taddr[7:0], glb_doutb_transposed[63:0]}
+        .glb_load_bus(glb_load_bus), // {load_sel[6:0], taddr[7:0], glb_doutb_transposed[31:0]}
         // busy signal
         .glb_output_busy(glb_output_busy)
     );

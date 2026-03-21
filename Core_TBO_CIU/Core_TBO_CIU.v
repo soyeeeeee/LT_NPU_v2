@@ -27,10 +27,11 @@ module Core_TBO_CIU(
 
     ////////// Core //////////
     input core_en,
-    // control signal, AGU initial, tile size
+    // control signal, AGU initial, tile size, requantization
     input [15:0] core_control,  // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
     input [27:0] core_AGU_initial, // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
     input [29:0] core_tile_param, // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
+    
     // W_storage
     input [79:0] weight_loader_w_storage_bus, // {en_0, en_1, en_2, en_3, addr[75:64], data[63:0]}
     // B_storage

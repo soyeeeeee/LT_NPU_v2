@@ -37,12 +37,13 @@ module LT_NPU(
     wire [10:0] lower_busy_bus; // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_out, GLB_in, CIU, PreP, PosP}
     assign lower_busy_bus = {core_1_busy, core_2_busy, core_3_busy, core_4_busy, core_5_busy, core_6_busy, glb_output_busy, glb_input_busy, cycle_busy, prep_busy, posp_busy};
     // loader control
-    wire [20:0] weight_loader_bus; // {en[20], double_buffer_sel[19], weight_amount[18:7], bias_amount[6:0]}
+    wire [21:0] weight_loader_bus; // {en[21], double_buffer_sel[20:19], weight_amount[18:7], bias_amount[6:0]}
     // core control
     wire core_en_1, core_en_2, core_en_3, core_en_4, core_en_5, core_en_6;
     wire [15:0] core_control; // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
-    wire [27:0] core_AGU_initial_1, core_AGU_initial_2, core_AGU_initial_3, core_AGU_initial_4, core_AGU_initial_5, core_AGU_initial_6; // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+    wire [28:0] core_AGU_initial_1, core_AGU_initial_2, core_AGU_initial_3, core_AGU_initial_4, core_AGU_initial_5, core_AGU_initial_6; // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
     wire [29:0] core_tile_param; // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
+    wire [182:0] requant_param; // {factor[15:0], zp[39:0], shift[4:0]}*3
     // TBO control
     wire [22:0] tbo_param; // {tile_sel_cycle, tile_assign}
     // CIU control
@@ -79,7 +80,7 @@ module LT_NPU(
         .lower_busy_bus(lower_busy_bus), // {Core_1, Core_2, Core_3, Core_4, Core_5, Core_6, GLB_in, GLB_out, CIU, PreP, PosP}
 
         // Weight Loader control
-        .weight_loader_bus(weight_loader_bus),  // {en[20], double_buffer_sel[19], weight_amount[18:7], bias_amount[6:0]}
+        .weight_loader_bus(weight_loader_bus),  // {en[21], double_buffer_sel[20:19], weight_amount[18:7], bias_amount[6:0]}
 
         // Core control and parameters
         .core_en_1(core_en_1),
@@ -89,13 +90,14 @@ module LT_NPU(
         .core_en_5(core_en_5),
         .core_en_6(core_en_6),
         .core_control(core_control), // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
-        .core_AGU_initial_1(core_AGU_initial_1), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-        .core_AGU_initial_2(core_AGU_initial_2), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-        .core_AGU_initial_3(core_AGU_initial_3), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-        .core_AGU_initial_4(core_AGU_initial_4), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-        .core_AGU_initial_5(core_AGU_initial_5), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
-        .core_AGU_initial_6(core_AGU_initial_6), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial_1(core_AGU_initial_1), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial_2(core_AGU_initial_2), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial_3(core_AGU_initial_3), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial_4(core_AGU_initial_4), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial_5(core_AGU_initial_5), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial_6(core_AGU_initial_6), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
+        .requant_param(requant_param), // {factor[15:0], zp[39:0], shift[4:0]}*3
 
         // TBO control and parameters
         .tbo_param(tbo_param), // {tile_sel_cycle, tile_assign}
@@ -136,20 +138,20 @@ module LT_NPU(
     wire [8:0] glb_ciu_wb_bus_4; // {en, addr[7:0]}
     wire [8:0] glb_ciu_wb_bus_5; // {en, addr[7:0]}
     wire [8:0] glb_ciu_wb_bus_6; // {en, addr[7:0]}
-    wire [64:0] prep_glb_wb_bus; // {valid, data[63:0]}
-    wire [64:0] ciu_glb_wb_bus_1; // {valid, data[63:0]}
-    wire [64:0] ciu_glb_wb_bus_2; // {valid, data[63:0]}
-    wire [64:0] ciu_glb_wb_bus_3; // {valid, data[63:0]}
-    wire [64:0] ciu_glb_wb_bus_4; // {valid, data[63:0]}
-    wire [64:0] ciu_glb_wb_bus_5; // {valid, data[63:0]}
-    wire [64:0] ciu_glb_wb_bus_6; // {valid, data[63:0]}
-    wire [72:0] glb_ciu_load_bus_1; // {en, addr[7:0], data[63:0]}
-    wire [72:0] glb_ciu_load_bus_2; // {en, addr[7:0], data[63:0]}
-    wire [72:0] glb_ciu_load_bus_3; // {en, addr[7:0], data[63:0]}
-    wire [72:0] glb_ciu_load_bus_4; // {en, addr[7:0], data[63:0]}
-    wire [72:0] glb_ciu_load_bus_5; // {en, addr[7:0], data[63:0]}
-    wire [72:0] glb_ciu_load_bus_6; // {en, addr[7:0], data[63:0]}
-    wire [72:0] glb_posp_load_bus; // {en, addr[7:0], data[63:0]}
+    wire [32:0] prep_glb_wb_bus; // {valid, data[31:0]}
+    wire [32:0] ciu_glb_wb_bus_1; // {valid, data[31:0]}
+    wire [32:0] ciu_glb_wb_bus_2; // {valid, data[31:0]}
+    wire [32:0] ciu_glb_wb_bus_3; // {valid, data[31:0]}
+    wire [32:0] ciu_glb_wb_bus_4; // {valid, data[31:0]}
+    wire [32:0] ciu_glb_wb_bus_5; // {valid, data[31:0]}
+    wire [32:0] ciu_glb_wb_bus_6; // {valid, data[31:0]}
+    wire [40:0] glb_ciu_load_bus_1; // {en, addr[7:0], data[31:0]}
+    wire [40:0] glb_ciu_load_bus_2; // {en, addr[7:0], data[31:0]}
+    wire [40:0] glb_ciu_load_bus_3; // {en, addr[7:0], data[31:0]}
+    wire [40:0] glb_ciu_load_bus_4; // {en, addr[7:0], data[31:0]}
+    wire [40:0] glb_ciu_load_bus_5; // {en, addr[7:0], data[31:0]}
+    wire [40:0] glb_ciu_load_bus_6; // {en, addr[7:0], data[31:0]}
+    wire [40:0] glb_posp_load_bus; // {en, addr[7:0], data[31:0]}
 
     ////////// dummy assign //////////
     //assign prep_glb_wb_bus = 0;
@@ -174,21 +176,21 @@ module LT_NPU(
         .glb_ciu_wb_bus_4(glb_ciu_wb_bus_4), // {en, addr[7:0]}
         .glb_ciu_wb_bus_5(glb_ciu_wb_bus_5), // {en, addr[7:0]}
         .glb_ciu_wb_bus_6(glb_ciu_wb_bus_6), // {en, addr[7:0]}
-        .prep_glb_wb_bus(prep_glb_wb_bus), // {valid, data[63:0]}
-        .ciu_glb_wb_bus_1(ciu_glb_wb_bus_1), // {valid, data[63:0]}
-        .ciu_glb_wb_bus_2(ciu_glb_wb_bus_2), // {valid, data[63:0]}
-        .ciu_glb_wb_bus_3(ciu_glb_wb_bus_3), // {valid, data[63:0]}
-        .ciu_glb_wb_bus_4(ciu_glb_wb_bus_4), // {valid, data[63:0]}
-        .ciu_glb_wb_bus_5(ciu_glb_wb_bus_5), // {valid, data[63:0]}
-        .ciu_glb_wb_bus_6(ciu_glb_wb_bus_6), // {valid, data[63:0]}
+        .prep_glb_wb_bus(prep_glb_wb_bus), // {valid, data[31:0]}
+        .ciu_glb_wb_bus_1(ciu_glb_wb_bus_1), // {valid, data[31:0]}
+        .ciu_glb_wb_bus_2(ciu_glb_wb_bus_2), // {valid, data[31:0]}
+        .ciu_glb_wb_bus_3(ciu_glb_wb_bus_3), // {valid, data[31:0]}
+        .ciu_glb_wb_bus_4(ciu_glb_wb_bus_4), // {valid, data[31:0]}
+        .ciu_glb_wb_bus_5(ciu_glb_wb_bus_5), // {valid, data[31:0]}
+        .ciu_glb_wb_bus_6(ciu_glb_wb_bus_6), // {valid, data[31:0]}
         // GLB_output
-        .glb_ciu_load_bus_1(glb_ciu_load_bus_1), // {en, addr[7:0], data[63:0]}
-        .glb_ciu_load_bus_2(glb_ciu_load_bus_2), // {en, addr[7:0], data[63:0]}
-        .glb_ciu_load_bus_3(glb_ciu_load_bus_3), // {en, addr[7:0], data[63:0]}
-        .glb_ciu_load_bus_4(glb_ciu_load_bus_4), // {en, addr[7:0], data[63:0]}
-        .glb_ciu_load_bus_5(glb_ciu_load_bus_5), // {en, addr[7:0], data[63:0]}
-        .glb_ciu_load_bus_6(glb_ciu_load_bus_6), // {en, addr[7:0], data[63:0]}
-        .glb_posp_load_bus(glb_posp_load_bus), // {en, addr[7:0], data[63:0]}
+        .glb_ciu_load_bus_1(glb_ciu_load_bus_1), // {en, addr[7:0], data[31:0]}
+        .glb_ciu_load_bus_2(glb_ciu_load_bus_2), // {en, addr[7:0], data[31:0]}
+        .glb_ciu_load_bus_3(glb_ciu_load_bus_3), // {en, addr[7:0], data[31:0]}
+        .glb_ciu_load_bus_4(glb_ciu_load_bus_4), // {en, addr[7:0], data[31:0]}
+        .glb_ciu_load_bus_5(glb_ciu_load_bus_5), // {en, addr[7:0], data[31:0]}
+        .glb_ciu_load_bus_6(glb_ciu_load_bus_6), // {en, addr[7:0], data[31:0]}
+        .glb_posp_load_bus(glb_posp_load_bus), // {en, addr[7:0], data[31:0]}
         // busy signal
         .glb_input_busy(glb_input_busy),
         .glb_output_busy(glb_output_busy)
@@ -197,36 +199,36 @@ module LT_NPU(
 
     ////////// debug //////////
     (* mark_debug = "true" *) wire [15:0] debug_core_control;
-    (* mark_debug = "true" *) wire [63:0] debug_tbo_core_cal_data_1;
-    (* mark_debug = "true" *) wire [63:0] debug_tbo_core_cal_data_2;
-    (* mark_debug = "true" *) wire [63:0] debug_tbo_core_cal_data_3;
-    (* mark_debug = "true" *) wire [63:0] debug_tbo_core_cal_data_4;
-    (* mark_debug = "true" *) wire [63:0] debug_tbo_core_cal_data_5;
-    (* mark_debug = "true" *) wire [63:0] debug_tbo_core_cal_data_6;
-    (* mark_debug = "true" *) wire [63:0] debug_w_storage_core_data_0;
+    (* mark_debug = "true" *) wire [31:0] debug_tbo_core_cal_data_1;
+    (* mark_debug = "true" *) wire [31:0] debug_tbo_core_cal_data_2;
+    (* mark_debug = "true" *) wire [31:0] debug_tbo_core_cal_data_3;
+    (* mark_debug = "true" *) wire [31:0] debug_tbo_core_cal_data_4;
+    (* mark_debug = "true" *) wire [31:0] debug_tbo_core_cal_data_5;
+    (* mark_debug = "true" *) wire [31:0] debug_tbo_core_cal_data_6;
+    (* mark_debug = "true" *) wire [31:0] debug_w_storage_core_data_0;
     (* mark_debug = "true" *) wire [31:0] debug_b_storage_core_data_0;
-    (* mark_debug = "true" *) wire [72:0] debug_core_tbo_store_bus;
+    (* mark_debug = "true" *) wire [40:0] debug_core_tbo_store_bus;
     (* mark_debug = "true" *) wire [7:0] debug_addr_cal;
     ////////// debug end //////////
 
 
     ////////// Core_TBO_CIU Assembly //////////
-    wire [71:0] stream_a_14, stream_a_45, stream_a_56, stream_a_63, stream_a_32, stream_a_21;
-    wire [71:0] stream_b_12, stream_b_23, stream_b_36, stream_b_65, stream_b_54, stream_b_41;
-    wire [79:0] 
+    wire [39:0] stream_a_14, stream_a_45, stream_a_56, stream_a_63, stream_a_32, stream_a_21;
+    wire [39:0] stream_b_12, stream_b_23, stream_b_36, stream_b_65, stream_b_54, stream_b_41;
+    wire [80:0] 
         weight_loader_w_storage_bus_1, 
         weight_loader_w_storage_bus_2, 
         weight_loader_w_storage_bus_3, 
         weight_loader_w_storage_bus_4, 
         weight_loader_w_storage_bus_5, 
-        weight_loader_w_storage_bus_6; // {en_0, en_1, en_2, en_3, addr[75:64], data[63:0]}
+        weight_loader_w_storage_bus_6; // {en_0, en_1, en_2, en_3, addr[12:0], data[63:0]}
     wire [74:0] 
         weight_loader_b_storage_bus_1,
         weight_loader_b_storage_bus_2,
         weight_loader_b_storage_bus_3,
         weight_loader_b_storage_bus_4,
         weight_loader_b_storage_bus_5,
-        weight_loader_b_storage_bus_6; // {en_0, en_1, en_2, en_3, addr[70:64], data[63:0]}
+        weight_loader_b_storage_bus_6; // {en_0, en_1, en_2, en_3, addr[6:0], data[63:0]}
     
     // Core 1
     Core_TBO_CIU core_1(
@@ -252,8 +254,9 @@ module LT_NPU(
         // Core
         .core_en(core_en_1),
         .core_control(core_control),  // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
-        .core_AGU_initial(core_AGU_initial_1), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial(core_AGU_initial_1), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
+        .requant_param(requant_param), // {factor[15:0], zp[39:0], shift[4:0]}*3
         .weight_loader_w_storage_bus(weight_loader_w_storage_bus_1), // {en_0, en_1, en_2, en_3, addr[75:64], data[63:0]}
         .weight_loader_b_storage_bus(weight_loader_b_storage_bus_1), // {en_0, en_1, en_2, en_3, addr[70:64], data[63:0]}
         .core_busy(core_1_busy),
@@ -295,8 +298,9 @@ module LT_NPU(
         // Core
         .core_en(core_en_2),
         .core_control(core_control),  // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
-        .core_AGU_initial(core_AGU_initial_2), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial(core_AGU_initial_2), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
+        .requant_param(requant_param), // {factor[15:0], zp[39:0], shift[4:0]}*3
         .weight_loader_w_storage_bus(weight_loader_w_storage_bus_2), // {en_0, en_1, en_2, en_3, addr[75:64], data[63:0]}
         .weight_loader_b_storage_bus(weight_loader_b_storage_bus_2), // {en_0, en_1, en_2, en_3, addr[70:64], data[63:0]}
         .core_busy(core_2_busy)
@@ -326,8 +330,9 @@ module LT_NPU(
         // Core
         .core_en(core_en_3),
         .core_control(core_control),  // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
-        .core_AGU_initial(core_AGU_initial_3), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial(core_AGU_initial_3), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
+        .requant_param(requant_param), // {factor[15:0], zp[39:0], shift[4:0]}*3
         .weight_loader_w_storage_bus(weight_loader_w_storage_bus_3), // {en_0, en_1, en_2, en_3, addr[75:64], data[63:0]}
         .weight_loader_b_storage_bus(weight_loader_b_storage_bus_3), // {en_0, en_1, en_2, en_3, addr[70:64], data[63:0]}
         .core_busy(core_3_busy)
@@ -357,8 +362,9 @@ module LT_NPU(
         // Core
         .core_en(core_en_4),
         .core_control(core_control),  // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
-        .core_AGU_initial(core_AGU_initial_4), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial(core_AGU_initial_4), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
+        .requant_param(requant_param), // {factor[15:0], zp[39:0], shift[4:0]}*3
         .weight_loader_w_storage_bus(weight_loader_w_storage_bus_4), // {en_0, en_1, en_2, en_3, addr[75:64], data[63:0]}
         .weight_loader_b_storage_bus(weight_loader_b_storage_bus_4), // {en_0, en_1, en_2, en_3, addr[70:64], data[63:0]}
         .core_busy(core_4_busy)
@@ -388,8 +394,9 @@ module LT_NPU(
         // Core
         .core_en(core_en_5),
         .core_control(core_control),  // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
-        .core_AGU_initial(core_AGU_initial_5), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial(core_AGU_initial_5), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
+        .requant_param(requant_param), // {factor[15:0], zp[39:0], shift[4:0]}*3
         .weight_loader_w_storage_bus(weight_loader_w_storage_bus_5), // {en_0, en_1, en_2, en_3, addr[75:64], data[63:0]}
         .weight_loader_b_storage_bus(weight_loader_b_storage_bus_5), // {en_0, en_1, en_2, en_3, addr[70:64], data[63:0]}
         .core_busy(core_5_busy)
@@ -419,8 +426,9 @@ module LT_NPU(
         // Core
         .core_en(core_en_6),
         .core_control(core_control),  // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
-        .core_AGU_initial(core_AGU_initial_6), // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
+        .core_AGU_initial(core_AGU_initial_6), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
+        .requant_param(requant_param), // {factor[15:0], zp[39:0], shift[4:0]}*3
         .weight_loader_w_storage_bus(weight_loader_w_storage_bus_6), // {en_0, en_1, en_2, en_3, addr[75:64], data[63:0]}
         .weight_loader_b_storage_bus(weight_loader_b_storage_bus_6), // {en_0, en_1, en_2, en_3, addr[70:64], data[63:0]}
         .core_busy(core_6_busy)
@@ -436,8 +444,8 @@ module LT_NPU(
         // control bus
         .input_label(posp_control_bus[31:0]), // {hand_th[31:24], tool_th[23:16], block_th[15:8], safe_th[7:0]}
         // input data
-        .input_data_valid(glb_posp_load_bus[72]),
-        .input_data(glb_posp_load_bus[63:0]),
+        .input_data_valid(glb_posp_load_bus[40]),
+        .input_data(glb_posp_load_bus[31:0]),
         // output
         .result(inference_result),
         // busy
@@ -465,9 +473,9 @@ module LT_NPU(
         .s_axis_weight_tready (s_axis_weight_tready),
         // 控制訊號 (Controller 至子系統)
         .i_image_start        (prep_control_bus[1]), // TODO: 連接影像啟動控制訊號
-        .i_weight_start       (weight_loader_bus[20]),
+        .i_weight_start       (weight_loader_bus[21]),
         .i_image_buffer_sel   (prep_control_bus[0]), // TODO: 連接乒乓緩衝區切換訊號
-        .i_weight_buffer_sel  (weight_loader_bus[19]),
+        .i_weight_buffer_sel  (weight_loader_bus[20:19]),
         .i_weight_len         (weight_loader_bus[18:7]),
         .i_bias_len           (weight_loader_bus[6:0]),
         // 狀態訊號 (子系統至 Controller)
@@ -476,8 +484,8 @@ module LT_NPU(
         // 影像 BRAM 介面 (接至外部乒乓 BRAM)
         .i_prep_rd_en         (glb_prep_wb_bus[8]),     // Enable 訊號 (最高位)
         .i_prep_rd_addr       (glb_prep_wb_bus[7:0]),     // Address 訊號
-        .o_prep_rd_valid      (prep_glb_wb_bus[64]),     // 讀出資料有效訊號 (最高位)
-        .o_prep_rd_data       (prep_glb_wb_bus[63:0]),     // 讀出 128-bit 影像資料
+        .o_prep_rd_valid      (prep_glb_wb_bus[32]),     // 讀出資料有效訊號 (最高位)
+        .o_prep_rd_data       (prep_glb_wb_bus[31:0]),     // 讀出 128-bit 影像資料
         // 權重儲存匯流排 (子系統至 6 個運算核心)
         .o_wgt_storage_bus_1  (weight_loader_w_storage_bus_1),
         .o_wgt_storage_bus_2  (weight_loader_w_storage_bus_2),

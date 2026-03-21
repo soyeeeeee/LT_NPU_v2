@@ -8,7 +8,7 @@ module Top_controller(
     
     ////////// Instruction memory interface //////////
     output [8:0] IS_PC_bus, // {en, 8bit address}
-    input [39:0] IS,
+    input [71:0] IS,
     
     ////////// Submodule Busy signals //////////
     input instruction_loader_busy,
@@ -22,7 +22,7 @@ module Top_controller(
     output reg [9:0] VLIW_length,
     // Weight Loader control
     output reg weight_loader_en,
-    output reg weight_loader_buffer_sel,
+    output reg [1:0] weight_loader_buffer_sel,
     output reg [11:0] weight_amount,
     output reg [6:0] bias_amount,
     // Instruction Loader control
@@ -32,21 +32,22 @@ module Top_controller(
     // param
     output reg [16:0] output_combined,      // {glb_out_mode, width_out, ch_out}
     output reg [16:0] input_combined,       // {glb_in_mode, width_in, ch_in}
-    output reg [ 3:0] double_buffer_sel,    // {output_glb, input_glb, W_storage, B_storage}
+    output reg [ 5:0] double_buffer_sel,    // {output_glb, input_glb, W_storage, B_storage}
     output reg [ 7:0] cycle_tile_size,      // {cycle_tile_size[7:0]}
     output reg [10:0] output_ch_to_Y_initial,
     output reg [10:0] input_ch_to_Y_initial,
     output reg [31:0] posp_param,           // {hand_th, tool_th, block_th, safe_th}
+    output reg [182:0] requant_param,       // {factor[15:0], zp[39:0], shift[4:0]}*3
     ////////// System status //////////
     output reg PL_busy                      // PL working, notify PS
 );
 
     ////////// Instruction Decoding //////////
-    wire [2:0] op_class  = IS[39:37];
-    wire [2:0] op_func   = IS[36:34];
-    wire [1:0] op_cond   = IS[33:32];
-    wire [31:0] num_1    = IS[31:16];
-    wire [15:0] num_2    = IS[15:0];
+    wire [2:0] op_class  = IS[71:69];
+    wire [2:0] op_func   = IS[68:66];
+    wire [1:0] op_cond   = IS[65:64];
+    wire [31:0] num_1    = IS[63:32];
+    wire [31:0] num_2    = IS[31: 0];
     ////////// Instruction Decoding end //////////
 
     ////////// Instruction RAM interface //////////
@@ -92,6 +93,9 @@ module Top_controller(
     localparam FUNC_core_param       = 3'd3;
     localparam FUNC_ch_order         = 3'd4;
     localparam FUNC_posp_param       = 3'd5;
+    localparam FUNC_requant_param_0  = 3'd6;
+    localparam FUNC_requant_param_1  = 3'd7;
+    localparam FUNC_requant_param_2  = 3'd8;
     // Class 1: DRAM
     localparam CLASS_dram            = 3'd1;
     localparam FUNC_get_instruction  = 3'd0;
@@ -236,6 +240,7 @@ module Top_controller(
             output_ch_to_Y_initial <= 0;
             input_ch_to_Y_initial <= 0;
             posp_param <= 32'd0;
+            requant_param <= 183'd0;
         end
         else begin
             state <= next_state;
@@ -259,6 +264,7 @@ module Top_controller(
                     output_ch_to_Y_initial <= 0;
                     input_ch_to_Y_initial <= 0;
                     posp_param <= 32'd0;
+                    requant_param <= 183'd0;
                 end
                 S_decode: begin
                     weight_loader_en <= 0;
@@ -274,7 +280,7 @@ module Top_controller(
                                     input_combined  <= {num_1[1:0], num_2[14:0]};
                                 end
                                 FUNC_buffer_initial: begin // Change_GLB_parameter
-                                    double_buffer_sel  <= num_1[3:0];
+                                    double_buffer_sel  <= num_1[5:0];
                                 end
                                 FUNC_core_param: begin // Change_core_parameter
                                     cycle_tile_size <= num_1[7:0];
@@ -284,7 +290,16 @@ module Top_controller(
                                     input_ch_to_Y_initial <= num_2[10:0];
                                 end
                                 FUNC_posp_param: begin // Change_postprocess_parameter
-                                    posp_param <= {num_1, num_2};
+                                    posp_param <= {num_1[15:0], num_2[15:0]};
+                                end
+                                FUNC_requant_param_0: begin // Change_requantization_parameter
+                                    requant_param[182:122] <= {num_1[28:0], num_2[31:0]};
+                                end
+                                FUNC_requant_param_1: begin // Change_requantization_parameter
+                                    requant_param[121:61] <= {num_1[28:0], num_2[31:0]};
+                                end
+                                FUNC_requant_param_2: begin // Change_requantization_parameter
+                                    requant_param[60:0] <= {num_1[28:0], num_2[31:0]};
                                 end
                                 default: begin
                                     // none
@@ -294,7 +309,7 @@ module Top_controller(
                         CLASS_dram: begin
                             case (op_func)
                                 FUNC_get_weight: begin // get_weight
-                                    weight_loader_buffer_sel <= num_2[8];
+                                    weight_loader_buffer_sel <= num_2[8:7];
                                     weight_amount <= num_1[11:0];
                                     bias_amount   <= num_2[6:0];
                                     weight_loader_en <= 1;
