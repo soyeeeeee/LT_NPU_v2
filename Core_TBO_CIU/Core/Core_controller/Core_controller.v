@@ -6,7 +6,7 @@ module Core_controller(
     input rst,
     // SR control
     input [2:0] mode_in,
-    input acc_done,
+    input requant_done,
     // Core en counter control
     input [6:0] width_out_in,
     input [7:0] ch_in_in,
@@ -174,7 +174,7 @@ module Core_controller(
         end
         else begin
             if(state == processing || state == ending) begin
-                SR_1 <= {SR_1[4:0], acc_done};
+                SR_1 <= {SR_1[4:0], requant_done};
             end
             else begin
                 SR_1 <= SR_1;

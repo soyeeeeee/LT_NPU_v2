@@ -116,7 +116,7 @@ module Accumulator(
             done_sr <= {done_sr[1:0], done};
         end
     end
-    assign acc_done = done_sr[1]; // -1 CLK than value
+    assign acc_done = done_sr[2]; // 0 CLK than value
     ////////// SR end //////////
     
     ////////// Stage 1 ////////// 
