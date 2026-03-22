@@ -300,7 +300,7 @@ module Accumulator(
         else begin
             case(mode)
             maxpooling: begin
-                acc_out <= {16{comp_result[7]}, comp_result};
+                acc_out <= {{16{comp_result[7]}}, comp_result};
             end
             default: begin
                 if(ReLU_en == 1) begin

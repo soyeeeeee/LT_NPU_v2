@@ -8,11 +8,11 @@ module AGU_W(
     input rst,
     input set,
     input [2:0] mode_in,
-    input [11:0] AGU_W_initial_in,
+    input [12:0] AGU_W_initial_in,
     input [6:0] width_out_in, //64(0~63) => conv 1
     input [7:0] ch_in_in,
     input [7:0] ch_out_in,    //channel may vary per layer
-    output reg [11:0] Waddr,
+    output reg [12:0] Waddr,
     output reg done
     );
     
@@ -20,7 +20,7 @@ module AGU_W(
     parameter conv = 0, maxpooling = 1, DW = 2, PW = 3, GAP = 4;
 
     ////////// input buffer ////////// (2 cycle)
-    reg [11:0] AGU_W_initial;
+    reg [12:0] AGU_W_initial;
     reg [6:0] width_out;
     reg [7:0] ch_in;
     reg [7:0] ch_out;
@@ -60,7 +60,7 @@ module AGU_W(
             default: kernel_L <= 0;
         endcase
     end
-    wire [11:0] k_stride = kernel_L + 1;
+    wire [12:0] k_stride = kernel_L + 1;
     ////////// input buffer end //////////
 
     ////////// en SR //////////
@@ -112,7 +112,7 @@ module AGU_W(
     end
 
     // adder
-    reg [11:0] adder_1;
+    reg [12:0] adder_1;
     always@(posedge CLK) begin
         if(rst) begin
             adder_1 <= 0;
@@ -162,7 +162,7 @@ module AGU_W(
     end
 
     // adder reg
-    reg [11:0] adder_2;
+    reg [12:0] adder_2;
     always@(posedge CLK) begin
         if(rst == 1) begin
             adder_2 <= 0;
@@ -180,7 +180,7 @@ module AGU_W(
 
     ////////// Stage 3 //////////
     reg [7:0] ch_count,next_ch_count;
-    reg [11:0] L, next_L;
+    reg [12:0] L, next_L;
     reg s3_done;
     //counter ch_count & L
     always@(*) begin

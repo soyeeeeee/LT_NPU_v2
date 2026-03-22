@@ -115,7 +115,7 @@ module Requantizer(
     ////////// Stage 3 reg end //////////
 
     ////////// Stage 4 reg //////////
-    reg signed [15:0] shift_reg;
+    reg signed [39:0] shift_reg; // 改為 [39:0] 以避免截斷
     reg signed [7:0] A_reg_3;
     
     always@(posedge CLK) begin
@@ -145,11 +145,13 @@ module Requantizer(
             if(en_sr[3]) begin
                 case(requantization)
                     1'b1: begin
-                        if(shift_reg > 127) begin
-                            requant_out <= 8'd127;
-                        end
-                        else if(shift_reg < -128) begin
-                            requant_out <= -8'd128;
+                        if(shift_reg[39:7] != {33{shift_reg[7]}}) begin
+                            if(shift_reg[39] == 0) begin
+                                requant_out <= 8'h7F;
+                            end
+                            else begin
+                                requant_out <= 8'h80;
+                            end
                         end
                         else begin
                             requant_out <= shift_reg[7:0];

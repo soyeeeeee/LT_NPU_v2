@@ -40,7 +40,7 @@ module LT_NPU(
     wire [21:0] weight_loader_bus; // {en[21], double_buffer_sel[20:19], weight_amount[18:7], bias_amount[6:0]}
     // core control
     wire core_en_1, core_en_2, core_en_3, core_en_4, core_en_5, core_en_6;
-    wire [15:0] core_control; // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
+    wire [18:0] core_control; // {mode_in[2:0], stride_X_in[1:0], ReLU_en_in, padding, tile_sel_in[8:0], requantization, factor_sel[1:0]}
     wire [28:0] core_AGU_initial_1, core_AGU_initial_2, core_AGU_initial_3, core_AGU_initial_4, core_AGU_initial_5, core_AGU_initial_6; // {AGU_W_initial[27:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
     wire [29:0] core_tile_param; // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
     wire [182:0] requant_param; // {factor[15:0], zp[39:0], shift[4:0]}*3
@@ -89,7 +89,7 @@ module LT_NPU(
         .core_en_4(core_en_4),
         .core_en_5(core_en_5),
         .core_en_6(core_en_6),
-        .core_control(core_control), // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
+        .core_control(core_control), // {mode_in[2:0], stride_X_in[1:0], ReLU_en_in, padding, tile_sel_in[8:0], requantization, factor_sel[1:0]}
         .core_AGU_initial_1(core_AGU_initial_1), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_AGU_initial_2(core_AGU_initial_2), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_AGU_initial_3(core_AGU_initial_3), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
@@ -253,7 +253,7 @@ module LT_NPU(
 
         // Core
         .core_en(core_en_1),
-        .core_control(core_control),  // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
+        .core_control(core_control),  // {mode_in[2:0], stride_X_in[1:0], ReLU_en_in, padding, tile_sel_in[8:0], requantization, factor_sel[1:0]}
         .core_AGU_initial(core_AGU_initial_1), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
         .requant_param(requant_param), // {factor[15:0], zp[39:0], shift[4:0]}*3
@@ -297,7 +297,7 @@ module LT_NPU(
 
         // Core
         .core_en(core_en_2),
-        .core_control(core_control),  // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
+        .core_control(core_control),  // {mode_in[2:0], stride_X_in[1:0], ReLU_en_in, padding, tile_sel_in[8:0], requantization, factor_sel[1:0]}
         .core_AGU_initial(core_AGU_initial_2), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
         .requant_param(requant_param), // {factor[15:0], zp[39:0], shift[4:0]}*3
@@ -329,7 +329,7 @@ module LT_NPU(
 
         // Core
         .core_en(core_en_3),
-        .core_control(core_control),  // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
+        .core_control(core_control),  // {mode_in[2:0], stride_X_in[1:0], ReLU_en_in, padding, tile_sel_in[8:0], requantization, factor_sel[1:0]}
         .core_AGU_initial(core_AGU_initial_3), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
         .requant_param(requant_param), // {factor[15:0], zp[39:0], shift[4:0]}*3
@@ -361,7 +361,7 @@ module LT_NPU(
 
         // Core
         .core_en(core_en_4),
-        .core_control(core_control),  // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
+        .core_control(core_control),  // {mode_in[2:0], stride_X_in[1:0], ReLU_en_in, padding, tile_sel_in[8:0], requantization, factor_sel[1:0]}
         .core_AGU_initial(core_AGU_initial_4), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
         .requant_param(requant_param), // {factor[15:0], zp[39:0], shift[4:0]}*3
@@ -393,7 +393,7 @@ module LT_NPU(
 
         // Core
         .core_en(core_en_5),
-        .core_control(core_control),  // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
+        .core_control(core_control),  // {mode_in[2:0], stride_X_in[1:0], ReLU_en_in, padding, tile_sel_in[8:0], requantization, factor_sel[1:0]}
         .core_AGU_initial(core_AGU_initial_5), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
         .requant_param(requant_param), // {factor[15:0], zp[39:0], shift[4:0]}*3
@@ -425,7 +425,7 @@ module LT_NPU(
 
         // Core
         .core_en(core_en_6),
-        .core_control(core_control),  // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
+        .core_control(core_control),  // {mode_in[2:0], stride_X_in[1:0], ReLU_en_in, padding, tile_sel_in[8:0], requantization, factor_sel[1:0]}
         .core_AGU_initial(core_AGU_initial_6), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_tile_param(core_tile_param), // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
         .requant_param(requant_param), // {factor[15:0], zp[39:0], shift[4:0]}*3
