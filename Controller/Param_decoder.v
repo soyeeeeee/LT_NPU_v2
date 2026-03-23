@@ -28,7 +28,7 @@ module Param_decoder(
 
     ////////// Core //////////
     // control signal
-    output [18:0] core_control, // {mode_in[2:0], stride_X_in[1:0], ReLU_en_in, padding, tile_sel_in[8:0], requantization, factor_sel[1:0]}
+    output [16:0] core_control, // {mode_in[2:0], stride_X_in[1:0], ReLU_en_in, padding, tile_sel_in[8:0], requantization}
     // AGU initial
     output [28:0] core_AGU_initial_1, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
     output [28:0] core_AGU_initial_2, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
@@ -225,7 +225,7 @@ module Param_decoder(
     // TBO control
     assign tbo_param = {tile_sel_cycle, VLIW_num[74:55]};
     // Core control
-    assign core_control = {VLIW_num[132:126], tile_sel_cal, VLIW_num[9:7]};
+    assign core_control = {VLIW_num[132:126], tile_sel_cal, VLIW_num[9]};
     assign core_AGU_initial_1 = {AGU_W_initial, AGU_B_initial, AGU_O_initial_1};
     assign core_AGU_initial_2 = {AGU_W_initial, AGU_B_initial, AGU_O_initial_2};
     assign core_AGU_initial_3 = {AGU_W_initial, AGU_B_initial, AGU_O_initial_3};

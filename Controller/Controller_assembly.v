@@ -29,7 +29,7 @@ module Controller_assembly(
     output core_en_4,
     output core_en_5,
     output core_en_6,
-    output [18:0] core_control, // {mode_in[2:0], stride_X_in[1:0], ReLU_en_in, padding, tile_sel_in[8:0], requantization, factor_sel[1:0]}
+    output [16:0] core_control, // {mode_in[2:0], stride_X_in[1:0], ReLU_en_in, padding, tile_sel_in[8:0], requantization}
     // AGU initial
     output [28:0] core_AGU_initial_1, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
     output [28:0] core_AGU_initial_2, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
@@ -40,7 +40,7 @@ module Controller_assembly(
     // tile size
     output [29:0] core_tile_param, // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
     // requant param
-    output [182:0] requant_param, // {factor[15:0], zp[39:0], shift[4:0]}*3
+    output [60:0] requant_param, // {factor[15:0], zp[39:0], shift[4:0]}*3
 
     ////////// TBO control and parameters //////////
     output [22:0] tbo_param, // {tile_sel_cycle, tile_assign}
@@ -166,7 +166,7 @@ module Controller_assembly(
         .output_ch_to_Y_initial(output_ch_to_Y_initial),
         .input_ch_to_Y_initial(input_ch_to_Y_initial),
         .posp_param(posp_control_bus[31:0]),           // {hand_th, tool_th, block_th, safe_th}
-        .requant_param(requant_param), // {factor[15:0], zp[39:0], shift[4:0]}*3
+        .requant_initial(requant_initial), // requantization parameter initial
         // system status
         .PL_busy(PL_busy)                      // PL working, notify PS
     );
@@ -196,7 +196,7 @@ module Controller_assembly(
         .tbo_param(tbo_param), // {tile_sel_cycle, tile_assign}
 
         // Core
-        .core_control(core_control), // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0]}
+        .core_control(core_control), // {mode_in[15:13], stride_X_in[12:11], ReLU_en_in[10], padding[9], tile_sel_in[8:0], requantization}
         .core_AGU_initial_1(core_AGU_initial_1), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_AGU_initial_2(core_AGU_initial_2), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
         .core_AGU_initial_3(core_AGU_initial_3), // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
@@ -211,5 +211,19 @@ module Controller_assembly(
         .prep_buffer_sel(prep_control_bus[0])
     );
     ////////// Param Decoder end //////////
+    
+    ////////// Requantization RAM //////////
+    wire [7:0] requant_addr;
+    wire [7:0] requant_initial;      // requantization parameter initial
+    wire [1:0] requant_sel;
+    assign requant_sel = VLIW_num[8:7];
+    assign requant_addr = requant_initial + {6'd0, requant_sel};
+    Requant_storage requant_storage(
+        .clka(CLK),
+        .ena(1'b1),
+        .addra(requant_addr),
+        .douta(requant_param)
+    );
+    ////////// Requantization RAM end //////////
     
 endmodule

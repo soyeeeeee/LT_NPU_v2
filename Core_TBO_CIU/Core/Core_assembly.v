@@ -4,21 +4,13 @@ module Core(
     // basic
     input CLK, input rst, input en,
     ////////// control signal //////////
-    input [18:0] core_control, // {mode_in[2:0], stride_X_in[1:0], ReLU_en_in, padding, tile_sel_in[8:0], requantization, factor_sel[1:0]}
+    input [16:0] core_control, // {mode_in[2:0], stride_X_in[1:0], ReLU_en_in, padding, tile_sel_in[8:0], requantization}
     ////////// AGU initial //////////
     input [28:0] core_AGU_initial, // {AGU_W_initial[28:16], AGU_B_initial[15:8], AGU_O_initial[7:0]}
     ////////// tile size //////////
     input [29:0] core_tile_param, // {width_in[29:23], ch_in[22:15], width_out[14:8], ch_out[7:0]}
     ////////// requantization //////////
-    input [15:0] factor_0,
-    input [15:0] factor_1,
-    input [15:0] factor_2,
-    input [39:0] zp_0,
-    input [39:0] zp_1,
-    input [39:0] zp_2,
-    input [4:0] shift_0,
-    input [4:0] shift_1,
-    input [4:0] shift_2,
+    input [60:0] requant_param, // {factor[15:0], zp[39:0], shift[4:0]}
     ////////// cal tile buffer //////////
     output [8:0] core_tbo_cal_bus, // {valid_cal, addr_cal}
     input [31:0] tbo_core_cal_data_1,
@@ -62,13 +54,15 @@ module Core(
     ////////// mode define end //////////
 
     ////////// input buffer ////////// 
-    wire [2:0] mode = core_control[18:16];
-    wire [1:0] stride_X = core_control[15:14];
-    wire ReLU_en = core_control[13];
-    wire padding = core_control[12];
-    wire [8:0] tile_sel = core_control[11:3];
-    wire requantization = core_control[2];
-    wire [1:0] factor_sel = core_control[1:0];
+    wire [2:0] mode = core_control[16:14];
+    wire [1:0] stride_X = core_control[13:12];
+    wire ReLU_en = core_control[11];
+    wire padding = core_control[10];
+    wire [8:0] tile_sel = core_control[9:1];
+    wire requantization = core_control[0];
+    wire [15:0] factor = requant_param[60:45];
+    wire [39:0] zp = requant_param[44:5];
+    wire [4:0] shift = requant_param[4:0];
     wire [6:0] width_in = core_tile_param[29:23];
     wire [7:0] ch_in = core_tile_param[22:15];
     wire [6:0] width_out = core_tile_param[14:8];
@@ -375,33 +369,6 @@ module Core(
     ////////// Accumulator end //////////
 
     ////////// Requantizer //////////
-    reg [15:0] factor;
-    reg [39:0] zp;
-    reg [4:0] shift;
-    always@(posedge CLK) begin
-        case(factor_sel)
-            2'b00: begin
-                factor = factor_0;
-                zp = zp_0;
-                shift = shift_0;
-            end
-            2'b01: begin
-                factor = factor_1;
-                zp = zp_1;
-                shift = shift_1;
-            end
-            2'b10: begin
-                factor = factor_2;
-                zp = zp_2;
-                shift = shift_2;
-            end
-            default: begin
-                factor = factor_0;
-                zp = zp_0;
-                shift = shift_0;
-            end
-        endcase
-    end
     wire [7:0] requant_out_0, requant_out_1, requant_out_2, requant_out_3;
     Requantizer requantizer_0(
         .CLK(CLK),

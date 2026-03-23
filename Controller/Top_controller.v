@@ -37,7 +37,7 @@ module Top_controller(
     output reg [10:0] output_ch_to_Y_initial,
     output reg [10:0] input_ch_to_Y_initial,
     output reg [31:0] posp_param,           // {hand_th, tool_th, block_th, safe_th}
-    output reg [182:0] requant_param,       // {factor[15:0], zp[39:0], shift[4:0]}*3
+    output reg [7:0] requant_initial,       // requantization parameter address
     ////////// System status //////////
     output reg PL_busy                      // PL working, notify PS
 );
@@ -93,9 +93,7 @@ module Top_controller(
     localparam FUNC_core_param       = 3'd3;
     localparam FUNC_ch_order         = 3'd4;
     localparam FUNC_posp_param       = 3'd5;
-    localparam FUNC_requant_param_0  = 3'd6;
-    localparam FUNC_requant_param_1  = 3'd7;
-    localparam FUNC_requant_param_2  = 3'd8;
+    localparam FUNC_requant_param    = 3'd6;
     // Class 1: DRAM
     localparam CLASS_dram            = 3'd1;
     localparam FUNC_get_instruction  = 3'd0;
@@ -240,7 +238,7 @@ module Top_controller(
             output_ch_to_Y_initial <= 0;
             input_ch_to_Y_initial <= 0;
             posp_param <= 32'd0;
-            requant_param <= 183'd0;
+            requant_initial <= 8'd0;
         end
         else begin
             state <= next_state;
@@ -264,7 +262,7 @@ module Top_controller(
                     output_ch_to_Y_initial <= 0;
                     input_ch_to_Y_initial <= 0;
                     posp_param <= 32'd0;
-                    requant_param <= 183'd0;
+                    requant_initial <= 8'd0;
                 end
                 S_decode: begin
                     weight_loader_en <= 0;
@@ -292,14 +290,8 @@ module Top_controller(
                                 FUNC_posp_param: begin // Change_postprocess_parameter
                                     posp_param <= {num_1[15:0], num_2[15:0]};
                                 end
-                                FUNC_requant_param_0: begin // Change_requantization_parameter
-                                    requant_param[182:122] <= {num_1[28:0], num_2[31:0]};
-                                end
-                                FUNC_requant_param_1: begin // Change_requantization_parameter
-                                    requant_param[121:61] <= {num_1[28:0], num_2[31:0]};
-                                end
-                                FUNC_requant_param_2: begin // Change_requantization_parameter
-                                    requant_param[60:0] <= {num_1[28:0], num_2[31:0]};
+                                FUNC_requant_param: begin // Change_requantization_parameter
+                                    requant_initial <= num_1[7:0];
                                 end
                                 default: begin
                                     // none
