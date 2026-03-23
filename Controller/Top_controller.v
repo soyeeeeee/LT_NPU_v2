@@ -8,7 +8,7 @@ module Top_controller(
     
     ////////// Instruction memory interface //////////
     output [8:0] IS_PC_bus, // {en, 8bit address}
-    input [71:0] IS,
+    input [39:0] IS,
     
     ////////// Submodule Busy signals //////////
     input instruction_loader_busy,
@@ -43,11 +43,11 @@ module Top_controller(
 );
 
     ////////// Instruction Decoding //////////
-    wire [2:0] op_class  = IS[71:69];
-    wire [2:0] op_func   = IS[68:66];
-    wire [1:0] op_cond   = IS[65:64];
-    wire [31:0] num_1    = IS[63:32];
-    wire [31:0] num_2    = IS[31: 0];
+    wire [2:0] op_class  = IS[39:37];
+    wire [2:0] op_func   = IS[36:34];
+    wire [1:0] op_cond   = IS[33:32];
+    wire [15:0] num_1    = IS[31:16];
+    wire [15:0] num_2    = IS[15: 0];
     ////////// Instruction Decoding end //////////
 
     ////////// Instruction RAM interface //////////
@@ -288,7 +288,7 @@ module Top_controller(
                                     input_ch_to_Y_initial <= num_2[10:0];
                                 end
                                 FUNC_posp_param: begin // Change_postprocess_parameter
-                                    posp_param <= {num_1[15:0], num_2[15:0]};
+                                    posp_param <= {num_1, num_2};
                                 end
                                 FUNC_requant_param: begin // Change_requantization_parameter
                                     requant_initial <= num_1[7:0];

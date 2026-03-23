@@ -75,7 +75,7 @@ module Controller_assembly(
     ////////// Instruction RAM //////////
     // IS
     wire [8:0] IS_PC_bus; // {en, 8 bit address}
-    wire [71:0] IS;
+    wire [39:0] IS;
     IS_storage is_storage(
         .clka(CLK),
         .ena(IS_PC_bus[8]),
