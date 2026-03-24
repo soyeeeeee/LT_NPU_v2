@@ -26,7 +26,7 @@ module Requantizer(
             en_sr <= {en_sr[3:0], en};
         end
     end
-    assign requant_done = en_sr[4];
+    assign requant_done = en_sr[3]; // -1 cycle
     ////////// SR end //////////
 
     ////////// Stage 1 reg //////////
