@@ -19,13 +19,6 @@ module Output_buffer(
         end
         else begin
             core_out <= out_0;
-        end
-    end
-    always@(posedge CLK) begin
-        if(rst) begin
-            out_0 <= 0;
-        end
-        else begin
             if(en) begin
                 out_0 <= cal_result;
             end
