@@ -41,14 +41,14 @@ module Core_TBO_CIU(
     output core_busy,
     ////////// debug //////////
     output [15:0] debug_core_control,
-    output [63:0] debug_tbo_core_cal_data_1,
-    output [63:0] debug_tbo_core_cal_data_2,
-    output [63:0] debug_tbo_core_cal_data_3,
-    output [63:0] debug_tbo_core_cal_data_4,
-    output [63:0] debug_tbo_core_cal_data_5,
-    output [63:0] debug_tbo_core_cal_data_6,
-    output [63:0] debug_w_storage_core_data_0,
-    output [63:0] debug_b_storage_core_data_0,
+    output [31:0] debug_tbo_core_cal_data_1,
+    output [31:0] debug_tbo_core_cal_data_2,
+    output [31:0] debug_tbo_core_cal_data_3,
+    output [31:0] debug_tbo_core_cal_data_4,
+    output [31:0] debug_tbo_core_cal_data_5,
+    output [31:0] debug_tbo_core_cal_data_6,
+    output [31:0] debug_w_storage_core_data_0,
+    output [31:0] debug_b_storage_core_data_0,
     output [72:0] debug_core_tbo_store_bus,
     output [7:0] debug_addr_cal
     );
