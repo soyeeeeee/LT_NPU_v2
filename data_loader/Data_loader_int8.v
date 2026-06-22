@@ -59,13 +59,13 @@ module Data_loader (
     // ==========================================
     // 4. 權重與偏差輸出匯流排 (連接 6 個運算核心)
     // ==========================================
-    // 🌟 更新格式: {we[3:0], addr[12:0], data[63:0]} = 81-bit
-    output wire [80:0] o_wgt_storage_bus_1,
-    output wire [80:0] o_wgt_storage_bus_2,
-    output wire [80:0] o_wgt_storage_bus_3,
-    output wire [80:0] o_wgt_storage_bus_4,
-    output wire [80:0] o_wgt_storage_bus_5,
-    output wire [80:0] o_wgt_storage_bus_6,
+    // 🌟 更新格式: {we[3:0], addr[12:0], data[31:0]} = 81-bit
+    output wire [48:0] o_wgt_storage_bus_1,
+    output wire [48:0] o_wgt_storage_bus_2,
+    output wire [48:0] o_wgt_storage_bus_3,
+    output wire [48:0] o_wgt_storage_bus_4,
+    output wire [48:0] o_wgt_storage_bus_5,
+    output wire [48:0] o_wgt_storage_bus_6,
 
     // 格式: {we[3:0], addr[6:0], data[63:0]} = 75-bit (Bias 維持不變)
     output wire [74:0] o_bias_storage_bus_1,
@@ -219,12 +219,12 @@ module Data_loader (
     // === Weight Storage Bus (wwe 順序反轉: 3 2 1 0 -> 0 1 2 3) ===
     // INT8 Weight 格式：每個 64-bit Storage word 的 [31:0] 放 4 x INT8，
     // [63:32] 固定補 0；因此仍保留原本 81-bit Storage bus 與位址/指令格式。
-    assign o_wgt_storage_bus_1 = {{l_wwe1[0], l_wwe1[1], l_wwe1[2], l_wwe1[3]}, l_wa1, 32'd0, l_d1[31:0]};
-    assign o_wgt_storage_bus_2 = {{l_wwe2[0], l_wwe2[1], l_wwe2[2], l_wwe2[3]}, l_wa2, 32'd0, l_d2[31:0]};
-    assign o_wgt_storage_bus_3 = {{l_wwe3[0], l_wwe3[1], l_wwe3[2], l_wwe3[3]}, l_wa3, 32'd0, l_d3[31:0]};
-    assign o_wgt_storage_bus_4 = {{l_wwe4[0], l_wwe4[1], l_wwe4[2], l_wwe4[3]}, l_wa4, 32'd0, l_d4[31:0]};
-    assign o_wgt_storage_bus_5 = {{l_wwe5[0], l_wwe5[1], l_wwe5[2], l_wwe5[3]}, l_wa5, 32'd0, l_d5[31:0]};
-    assign o_wgt_storage_bus_6 = {{l_wwe6[0], l_wwe6[1], l_wwe6[2], l_wwe6[3]}, l_wa6, 32'd0, l_d6[31:0]};
+    assign o_wgt_storage_bus_1 = {{l_wwe1[0], l_wwe1[1], l_wwe1[2], l_wwe1[3]}, l_wa1, l_d1[31:0]};
+    assign o_wgt_storage_bus_2 = {{l_wwe2[0], l_wwe2[1], l_wwe2[2], l_wwe2[3]}, l_wa2, l_d2[31:0]};
+    assign o_wgt_storage_bus_3 = {{l_wwe3[0], l_wwe3[1], l_wwe3[2], l_wwe3[3]}, l_wa3, l_d3[31:0]};
+    assign o_wgt_storage_bus_4 = {{l_wwe4[0], l_wwe4[1], l_wwe4[2], l_wwe4[3]}, l_wa4, l_d4[31:0]};
+    assign o_wgt_storage_bus_5 = {{l_wwe5[0], l_wwe5[1], l_wwe5[2], l_wwe5[3]}, l_wa5, l_d5[31:0]};
+    assign o_wgt_storage_bus_6 = {{l_wwe6[0], l_wwe6[1], l_wwe6[2], l_wwe6[3]}, l_wa6, l_d6[31:0]};
 
     // === Bias Storage Bus (bwe 順序反轉: 3 2 1 0 -> 0 1 2 3) ===
     assign o_bias_storage_bus_1 = {{l_bwe1[0], l_bwe1[1], l_bwe1[2], l_bwe1[3]}, l_ba1, l_d1};
